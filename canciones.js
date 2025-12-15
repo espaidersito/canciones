@@ -4,12 +4,18 @@ const docenteLogueado = localStorage.getItem('docente');
 if (!docenteLogueado) {
   alert('Acceso restringido. Iniciá sesión primero.');
   window.location.href = 'login_docentes.html';
-} else {
-  const nombreDocenteDesktop = document.getElementById('nombreDocente');
-  const nombreDocenteMobile = document.getElementById('nombreDocenteOff');
+}
 
-  if (nombreDocenteDesktop) nombreDocenteDesktop.textContent = docenteLogueado;
-  if (nombreDocenteMobile) nombreDocenteMobile.textContent = docenteLogueado;
+
+const nombreDocenteDesktop = document.getElementById('nombreDocente');
+const nombreDocenteMobile = document.getElementById('nombreDocenteOff');
+
+if (nombreDocenteDesktop) {
+  nombreDocenteDesktop.textContent = docenteLogueado;
+}
+
+if (nombreDocenteMobile) {
+  nombreDocenteMobile.textContent = docenteLogueado;
 }
 
 
@@ -22,23 +28,28 @@ function cerrarSesionDocente() {
 const botonCerrarDesktop = document.getElementById('cerrarSesion');
 const botonCerrarMobile = document.getElementById('cerrarSesionOff');
 
-if (botonCerrarDesktop) botonCerrarDesktop.addEventListener('click', cerrarSesionDocente);
-if (botonCerrarMobile) botonCerrarMobile.addEventListener('click', cerrarSesionDocente);
+if (botonCerrarDesktop) {
+  botonCerrarDesktop.addEventListener('click', cerrarSesionDocente);
+}
+
+if (botonCerrarMobile) {
+  botonCerrarMobile.addEventListener('click', cerrarSesionDocente);
+}
 
 
-async function cargarPuntosAlumnos() {
+async function cargarPuntos() {
   try {
     const url = 'https://juegosinfantiles.tecnica4berazategui.edu.ar/essencial/excepcional/obtener_puntos.php';
-    const respuestaServidor = await fetch(url);
+    const respuesta = await fetch(url);
 
-    if (!respuestaServidor.ok) {
+    if (!respuesta.ok) {
       throw new Error('Error al obtener los datos');
     }
 
-    const listaAlumnos = await respuestaServidor.json();
+    const datos = await respuesta.json();
 
-    cargarTablaDesktop(listaAlumnos);
-    cargarTarjetasMobile(listaAlumnos);
+    cargarTablaDesktop(datos);
+    cargarVistaMobile(datos);
 
   } catch (error) {
     console.error('Error:', error);
@@ -46,87 +57,122 @@ async function cargarPuntosAlumnos() {
 }
 
 
-function cargarTablaDesktop(alumnos) {
+function cargarTablaDesktop(datos) {
   const cuerpoTabla = document.querySelector('#tablaPuntos tbody');
   if (!cuerpoTabla) return;
 
-  cuerpoTabla.replaceChildren();
+  cuerpoTabla.textContent = '';
 
-  if (!Array.isArray(alumnos) || alumnos.length === 0) {
+  if (!Array.isArray(datos) || datos.length === 0) {
     const fila = document.createElement('tr');
     const celda = document.createElement('td');
+
     celda.colSpan = 4;
-    celda.textContent = 'No hay registros aún';
-    fila.append(celda);
-    cuerpoTabla.append(fila);
+    celda.textContent = 'No hay registros aún.';
+    fila.appendChild(celda);
+    cuerpoTabla.appendChild(fila);
     return;
   }
 
-  alumnos.forEach(alumno => {
+  datos.forEach(registro => {
     const fila = document.createElement('tr');
 
     const celdaNombre = document.createElement('td');
-    celdaNombre.textContent = alumno.nombre;
+    celdaNombre.textContent = registro.nombre;
 
     const celdaPuntos = document.createElement('td');
-    celdaPuntos.textContent = alumno.puntos;
+    celdaPuntos.id = `puntos-${registro.id}`;
+    celdaPuntos.textContent = registro.puntos;
 
     const celdaFecha = document.createElement('td');
-    celdaFecha.textContent = alumno.ultima_actualizacion;
+    celdaFecha.textContent = registro.ultima_actualizacion;
 
     const celdaAcciones = document.createElement('td');
 
-    fila.append(
-      celdaNombre,
-      celdaPuntos,
-      celdaFecha,
-      celdaAcciones
-    );
+    fila.appendChild(celdaNombre);
+    fila.appendChild(celdaPuntos);
+    fila.appendChild(celdaFecha);
+    fila.appendChild(celdaAcciones);
 
-    cuerpoTabla.append(fila);
+    cuerpoTabla.appendChild(fila);
   });
 }
 
 
-function cargarTarjetasMobile(alumnos) {
+function cargarVistaMobile(datos) {
   const contenedorMobile = document.getElementById('tablaPuntosMobile');
   if (!contenedorMobile) return;
 
-  contenedorMobile.replaceChildren();
+  contenedorMobile.textContent = '';
 
-  if (!Array.isArray(alumnos) || alumnos.length === 0) {
+  if (!Array.isArray(datos) || datos.length === 0) {
     const mensaje = document.createElement('p');
     mensaje.className = 'text-center text-muted';
-    mensaje.textContent = 'No hay registros aún';
-    contenedorMobile.append(mensaje);
+    mensaje.textContent = 'No hay registros aún.';
+    contenedorMobile.appendChild(mensaje);
     return;
   }
 
-  alumnos.forEach(alumno => {
+  datos.forEach(registro => {
     const tarjeta = document.createElement('div');
     tarjeta.className = 'card mb-2 shadow-sm';
 
     const cuerpoTarjeta = document.createElement('div');
     cuerpoTarjeta.className = 'card-body';
 
-    const nombre = document.createElement('h5');
-    nombre.textContent = alumno.nombre;
+    const titulo = document.createElement('h5');
+    titulo.className = 'card-title mb-1';
+    titulo.textContent = registro.nombre;
 
-    const puntos = document.createElement('p');
-    puntos.textContent = `Puntos: ${alumno.puntos}`;
+    const textoPuntos = document.createElement('p');
+    textoPuntos.className = 'mb-1';
+
+    const etiquetaPuntos = document.createElement('strong');
+    etiquetaPuntos.textContent = 'Puntos: ';
+
+    const valorPuntos = document.createElement('span');
+    valorPuntos.id = `mobile-puntos-${registro.id}`;
+    valorPuntos.textContent = registro.puntos;
+
+    textoPuntos.appendChild(etiquetaPuntos);
+    textoPuntos.appendChild(valorPuntos);
 
     const fecha = document.createElement('p');
-    fecha.className = 'text-muted small';
-    fecha.textContent = `Última: ${alumno.ultima_actualizacion}`;
+    fecha.className = 'mb-2 text-muted small';
+    fecha.textContent = `Última: ${registro.ultima_actualizacion}`;
 
-    cuerpoTarjeta.append(nombre, puntos, fecha);
-    tarjeta.append(cuerpoTarjeta);
-    contenedorMobile.append(tarjeta);
+    cuerpoTarjeta.appendChild(titulo);
+    cuerpoTarjeta.appendChild(textoPuntos);
+    cuerpoTarjeta.appendChild(fecha);
+
+    tarjeta.appendChild(cuerpoTarjeta);
+    contenedorMobile.appendChild(tarjeta);
   });
 }
 
 
-document.addEventListener('DOMContentLoaded', () => {
-  cargarPuntosAlumnos();
-  setInterval(cargarPuntosAlumnos, 10000);
+const modalVideoBootstrap = new bootstrap.Modal(document.getElementById('videoModal'));
+const videoModal = document.getElementById('modalVideo');
+
+document.querySelectorAll('.play-btn').forEach(boton => {
+  boton.addEventListener('click', () => {
+    const srcVideo = boton.dataset.src;
+    if (!srcVideo) return;
+
+    videoModal.src = srcVideo;
+    videoModal.play().catch(() => {});
+    modalVideoBootstrap.show();
+  });
+});
+
+document.getElementById('videoModal').addEventListener('hidden.bs.modal', () => {
+  videoModal.pause();
+  videoModal.src = '';
+});
+
+
+document.querySelectorAll('.video-card video').forEach(video => {
+  video.addEventListener('click', () => {
+    video.paused ? video.play() : video.pause();
+  });
 });
